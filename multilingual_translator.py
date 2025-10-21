@@ -140,7 +140,7 @@ def index():
                         output_lines.append(f"{lang_label}\n{translation_results[lang_code]}")
 
                 # 改行で区切られた一つの文字列として保存
-                full_output = "\n".join(output_lines)
+                #full_output = "\n".join(output_lines)
 
     # HTMLテンプレート (templates/index.html) を表示する
     return render_template(
