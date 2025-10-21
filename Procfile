@@ -1,0 +1,1 @@
+web: gunicorn multilingual_translator:app
