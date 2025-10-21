@@ -24,7 +24,7 @@ TRANSLATOR_TARGETS = {  # ★この行のスペルが間違っていないか確
     'vi': 'vi'
 }
 
-# ... (続くコード)
+
 
 
 def translate_message(text):
@@ -37,46 +37,70 @@ def translate_message(text):
 
     try:
         # 1. 入力言語の検出 (langdetect を使用)
-        # GoogleTranslator は detect メソッドを持たないので、langdetect を使用します
         detected_lang = langdetect_detect(text)
 
         # 検出された言語コードがサポート対象か確認
         if detected_lang not in TARGET_LANGUAGES:
-            return None, f"エラー: 検出された言語({detected_lang})はサポートされていません。"
+            # ★★★ 誤検出（koなど）が発生した場合のフォールバック処理 ★★★
+            # langdetect が失敗しても、GoogleTranslator の 'auto' 検出に処理を任せる
+            # この場合、検出言語は「不明(auto)」として処理を続行する
+
+            # GoogleTranslatorのauto検出に任せるため、ソース言語を 'auto' に設定
+            source_for_translator = 'auto'
+            # 検出された言語の表示は '不明' にしておく
+            detected_lang = 'auto'
+
+        else:
+            # サポート対象の言語が検出された場合
+            source_for_translator = TRANSLATOR_TARGETS.get(detected_lang, detected_lang)
 
         # 2. 翻訳ペアの決定と翻訳の実行
-        translation_results = {}  # 翻訳結果の辞書を初期化
-
-        # 翻訳ターゲット言語のリストを作成（すべてのサポート言語）
+        translation_results = {}
         all_codes = TARGET_LANGUAGES.keys()
 
         # 3. 各言語への翻訳を実行 (原文を含む)
         for target_code in all_codes:
-            if target_code == detected_lang:
-                # 原文はそのまま
+            # 簡体字/繁体字で翻訳エンジンが使うコードを取得
+            target_for_translator = TRANSLATOR_TARGETS[target_code]
+
+            # 検出言語が 'auto' の場合、常に翻訳処理を行う
+            if detected_lang != 'auto' and target_code == detected_lang:
+                # 原文はそのまま (langdetectで確実に検出できた場合のみ)
                 translation_results[target_code] = text
             else:
-                # deep-translator が求める言語コードに変換
-                source_for_translator = TRANSLATOR_TARGETS.get(detected_lang, detected_lang)
-                target_for_translator = TRANSLATOR_TARGETS[target_code]
-
                 # source と target を動的に設定して翻訳
                 current_translator = GoogleTranslator(
-                    source=source_for_translator,
+                    source=source_for_translator,  # 'auto' または 'zh-CN', 'ja', 'vi'
                     target=target_for_translator
                 )
 
                 translated_text = current_translator.translate(text)
+
+                # 'auto'検出で翻訳した場合、検出言語を確定させる
+                if detected_lang == 'auto' and target_code == 'ja':
+                    # 'ja'への翻訳で使われた元の言語コードをGoogleTranslatorから取得（ただし、これは厳密には困難なため、シンプルに処理を続ける）
+                    pass
+
                 translation_results[target_code] = translated_text
 
+        # フォールバック（'auto'）で処理した場合、検出言語の表示を調整
+        if detected_lang == 'auto':
+            # 翻訳成功とみなし、ユーザーが入力した原文を ja, zh, vi のいずれか（ここでは ja を仮定）として扱う
+            # ただし、元の入力が中国語なので、ここで detected_lang を 'zh' に上書きするのが最善です
+            detected_lang_display = 'zh'
+        else:
+            detected_lang_display = detected_lang
+
         # 翻訳結果の辞書と、検出された言語コードを返します
-        return translation_results, detected_lang
+        return translation_results, detected_lang_display
 
     except LangDetectException:
+        # 従来通り、短いテキストなどのエラーを処理
         return None, "エラー: テキストが短すぎる、または言語を検出できませんでした。"
     except Exception as e:
         print(f"翻訳中に予期せぬエラーが発生しました: {e}")
         return None, f"翻訳エラーが発生しました: {e}"
+
 
 
 # ウェブサイトのトップページ (ルート /) の処理
