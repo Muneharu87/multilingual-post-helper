@@ -3,89 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3ヶ国語 投稿支援ツール</title>
+    <title>多言語投稿支援ツール</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f4f7f9; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; padding: 20px; box-sizing: border-box; }
-        .container { max-width: 650px; width: 100%; background: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
-        h1 { color: #333; text-align: center; margin-bottom: 20px; font-size: 1.8em; }
-        p.info { text-align: center; color: #555; margin-bottom: 20px; }
-
-        /* 入力フォームエリア */
-        textarea#input_text { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; resize: vertical; min-height: 100px; font-size: 1em; }
-        .button-group { display: flex; gap: 10px; margin-bottom: 30px; }
-        .button-group button { flex-grow: 1; background-color: #33a8ff; color: white; padding: 12px 15px; border: none; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: bold; transition: background-color 0.3s; }
-        .button-group button:hover { background-color: #007bff; }
-
-        /* 結果表示エリア */
-        .result-box { border-top: 2px solid #eee; padding-top: 20px; }
-        h2 { font-size: 1.3em; color: #007bff; margin-bottom: 15px; }
-        textarea#output_text { width: 100%; padding: 15px; border: 2px dashed #007bff; border-radius: 8px; box-sizing: border-box; resize: none; min-height: 150px; background-color: #e6f7ff; font-size: 1.05em; line-height: 1.5; color: #333; cursor: pointer; }
-        #copy-button { background-color: #28a745; margin-top: 10px; padding: 10px; }
-        #copy-button:hover { background-color: #1e7e34; }
-        .error { color: #d32f2f; background-color: #ffcdd2; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            resize: vertical;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .results-box {
+            margin-top: 25px;
+            padding: 15px;
+            border: 1px solid #007bff;
+            border-left: 5px solid #007bff;
+            background-color: #e9f7ff;
+            border-radius: 4px;
+        }
+        .error-message {
+            color: red;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+        .lang-label {
+            font-weight: bold;
+            color: #2c3e50;
+            display: block;
+            margin-top: 10px;
+        }
+        .output-text {
+            white-space: pre-wrap;
+            background-color: #fff;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📲 3ヶ国語 投稿支援ツール</h1>
-        <p class="info">日本語、中国語、ベトナム語のいずれかで入力すると、残りの2言語に自動で翻訳し、コピーしやすい形で併記します。</p>
+        <h1>多言語投稿支援ツール</h1>
 
         {% if error %}
-            <div class="error">{{ error }}</div>
+            <p class="error-message">🚨 {{ error }}</p>
         {% endif %}
 
         <form method="POST">
-            <label for="input_text" style="font-weight: bold; display: block; margin-bottom: 5px;">メッセージ入力:</label>
-            <textarea name="input_text" id="input_text" placeholder="例: 明日の朝10時に会議室でお会いしましょう。" required>{{ original_text or '' }}</textarea>
-            <div class="button-group">
-                <button type="submit">翻訳・コピー用テキスト作成</button>
+            <label for="input_text">翻訳したいテキストを入力してください:</label>
+            <textarea id="input_text" name="input_text" rows="8">{{ original_text if original_text else '' }}</textarea>
+
+            <div style="margin-top: 15px; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                <label>翻訳するターゲット言語を選択してください (複数選択可):</label>
+                <div style="margin-top: 5px;">
+                {% for code, label in all_langs.items() %}
+                    <input type="checkbox" id="lang_{{ code }}" name="target_langs" value="{{ code }}" checked>
+                    <label for="lang_{{ code }}" style="margin-right: 15px;">{{ label }}</label>
+                {% endfor %}
+                </div>
             </div>
+            <button type="submit" style="margin-top: 15px;">翻訳・コピー用テキスト作成</button>
         </form>
 
-        {% if full_output %}
-        <div class="result-box">
-            <h2>✨ 翻訳結果 (クリックしてコピー)</h2>
-            <p style="font-size: 0.9em; color: #777;">入力言語: {{ all_langs[detected_lang_code] }}</p>
+        {% if results and not error %}
+        <div class="results-box">
+            <h2>翻訳結果 (検出言語: {{ all_langs.get(detected_lang_code, '不明') }})</h2>
 
-            <textarea id="output_text" readonly onclick="copyText()">{{ full_output }}</textarea>
-            <div style="margin-top: 15px; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
-        <label>翻訳するターゲット言語を選択してください (複数選択可):</label>
-        <div style="margin-top: 5px;">
-        {% for code, label in all_langs.items() %}
-            {% if code != 'ja' %} <input type="checkbox" id="lang_{{ code }}" name="target_langs" value="{{ code }}" checked>
-            <label for="lang_{{ code }}">{{ label }}</label>
-            {% endif %}
-        {% endfor %}
-        </div>
-    </div>
+            {% for code, text in results.items() %}
+                {% if code != 'output' %}
+                    <span class="lang-label">
+                        {{ all_langs.get(code, code) }}:
+                        {% if code == detected_lang_code %}(原文){% endif %}
+                    </span>
+                    <div class="output-text">{{ text }}</div>
+                {% endif %}
+            {% endfor %}
 
-    <button type="submit" style="margin-top: 15px;">翻訳・コピー用テキスト作成</button>
-</form>
+            <hr style="margin: 15px 0;">
 
-            <button type="button" id="copy-button" onclick="copyText()">このテキストをコピーする</button>
-
-            <script>
-                function copyText() {
-                    const outputArea = document.getElementById('output_text');
-                    outputArea.select(); // テキストエリアのテキストを選択
-                    outputArea.setSelectionRange(0, 99999); // モバイル対応
-                    navigator.clipboard.writeText(outputArea.value)
-                        .then(() => {
-                            // コピー成功時のフィードバック
-                            const originalText = document.getElementById('copy-button').textContent;
-                            document.getElementById('copy-button').textContent = '✅ コピーしました！';
-                            setTimeout(() => {
-                                document.getElementById('copy-button').textContent = originalText;
-                            }, 1500);
-                        })
-                        .catch(err => {
-                            alert('コピーに失敗しました。手動でテキストを選択してコピーしてください。');
-                            console.error('コピーエラー:', err);
-                        });
-                }
-            </script>
+            <h3>コピー用テキスト (言語間改行なし)</h3>
+            <textarea id="copy_output" rows="10" readonly>{{ full_output }}</textarea>
+            <button onclick="copyToClipboard()" style="margin-top: 10px;">このテキストをコピーする</button>
         </div>
         {% endif %}
     </div>
+
+    <script>
+        function copyToClipboard() {
+            var copyText = document.getElementById("copy_output");
+
+            // テキストエリアのテキストを選択
+            copyText.select();
+            copyText.setSelectionRange(0, 99999); // モバイル対応
+
+            // クリップボードにコピー
+            document.execCommand("copy");
+
+            // ユーザーに通知
+            alert("コピー用テキストをクリップボードにコピーしました！");
+        }
+    </script>
 </body>
 </html>
