@@ -103,36 +103,37 @@ def translate_message(text, target_langs):
 # multilingual_translator.py の修正箇所 (index() 関数)
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    # ... (前略：変数初期化の部分は変更なし) ...
+    # ★★★ STEP 1: すべての変数を初期化 (GETリクエスト対策) ★★★
+    translation_results = None
+    original_text = None
+    detected_lang = None
+    error_message = None
+    full_output = ""
+    # コピー用テキストの出力順を定義 (enとkoを追加)
+    OUTPUT_ORDER = ['ja', 'zh', 'vi', 'en', 'ko']
 
     if request.method == 'POST':
         input_text = request.form.get('input_text')
 
-        # ★新規: 選択されたターゲット言語のリストを取得
+        # ★ STEP 2: 選択されたターゲット言語のリストを取得 ★
         target_langs = request.form.getlist('target_langs')
 
-        # ターゲットリストに入力言語を強制的に含める（原文表示のため）
-        # ただし、一旦リストを空にせず、以下で処理します。
+        # 翻訳ターゲットが一つも選択されていない場合はエラーを出す
+        if not target_langs:
+            error_message = "エラー: 翻訳するターゲット言語が一つも選択されていません。"
+            # translation_resultsはNoneのまま
 
-        if input_text and input_text.strip():
+        elif input_text and input_text.strip():
             # 翻訳関数に選択されたターゲット言語のリストを渡す
             translation_results, detected_lang = translate_message(input_text, target_langs)
-            original_text = input_text
-            # ... (後略：エラー処理とfull_output生成の部分は変更なし) ...
-
-    if request.method == 'POST':
-        input_text = request.form.get('input_text')
-
-        if input_text and input_text.strip():
-            translation_results, detected_lang = translate_message(input_text)
             original_text = input_text
 
             if isinstance(detected_lang, str) and detected_lang.startswith("エラー:"):
                 error_message = detected_lang
             elif translation_results:
-                # ★新規: コピー用テキストを作成
+                # ★ STEP 3: コピー用テキストを作成 (en, koを含む新しい順序で、改行は\n) ★
                 output_lines = []
-                for lang_code in ['ja', 'zh', 'vi']:  # 順番を固定
+                for lang_code in OUTPUT_ORDER:
                     if lang_code in translation_results:
                         lang_label = f"{TARGET_LANGUAGES[lang_code]}:"
                         # 原文はラベルを「(原文)」のように修正
@@ -141,7 +142,7 @@ def index():
 
                         output_lines.append(f"{lang_label}\n{translation_results[lang_code]}")
 
-                # 改行で区切られた一つの文字列として保存
+                # 改行（\n）で区切られた一つの文字列として保存
                 full_output = "\n".join(output_lines)
 
     # HTMLテンプレート (templates/index.html) を表示する
