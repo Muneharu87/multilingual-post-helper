@@ -24,7 +24,8 @@ DEEPL_TARGETS = {
     'ja': 'JA',
     'zh': 'ZH',
     'vi': 'VI',
-    'en': 'EN',
+    # ★★★ 修正箇所: 'EN' を 'EN-US' に変更 ★★★
+    'en': 'EN-US',
     'ko': 'KO'
 }
 
