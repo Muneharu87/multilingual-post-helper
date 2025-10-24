@@ -22,7 +22,9 @@ if not DEEPL_AUTH_KEY:
 TARGET_LANGUAGES = {
     'ja': '🇯🇵 日本語',
     'zh': '🇨🇳 中国語',
-    'vi': '🇻🇳 ベトナム語'
+    'vi': '🇻🇳 ベトナム語',
+    'en': '🇺🇸 英語',  # ★新規追加
+    'ko': '🇰🇷 韓国語'  # ★新規追加
 }
 
 # DeepLが使うターゲット言語コードのマップ
@@ -30,9 +32,10 @@ TARGET_LANGUAGES = {
 DEEPL_TARGETS = {
     'ja': 'JA',
     'zh': 'ZH',  # DeepLの中国語コードは 'ZH'
-    'vi': 'VI'
+    'vi': 'VI',
+    'en': 'EN',  # ★新規追加
+    'ko': 'KO'  # ★新規追加
 }
-
 # 翻訳エンジンの初期化
 try:
     translator = deepl.Translator(DEEPL_AUTH_KEY)
@@ -96,27 +99,25 @@ def translate_message(text):
         return None, f"翻訳エラーが発生しました: {e}"
 
 
-# ウェブサイトのトップページ (ルート /) の処理（変更なし）
+# multilingual_translator.py の修正箇所 (index() 関数)
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    translation_results = None
-    original_text = None
-    detected_lang = None
-    error_message = None
-    full_output = ""
+    # ... (前略：変数初期化の部分は変更なし) ...
 
-    # DeepLクライアントが初期化されていない場合はエラーとする
-    if translator is None:
-        error_message = "致命的なエラー：DeepL翻訳クライアントが初期化できませんでした。APIキーを確認してください。"
-        return render_template(
-            'index.html',
-            results=None,
-            original_text=None,
-            all_langs=TARGET_LANGUAGES,
-            detected_lang_code=None,
-            error=error_message,
-            full_output=""
-        )
+    if request.method == 'POST':
+        input_text = request.form.get('input_text')
+
+        # ★新規: 選択されたターゲット言語のリストを取得
+        target_langs = request.form.getlist('target_langs')
+
+        # ターゲットリストに入力言語を強制的に含める（原文表示のため）
+        # ただし、一旦リストを空にせず、以下で処理します。
+
+        if input_text and input_text.strip():
+            # 翻訳関数に選択されたターゲット言語のリストを渡す
+            translation_results, detected_lang = translate_message(input_text, target_langs)
+            original_text = input_text
+            # ... (後略：エラー処理とfull_output生成の部分は変更なし) ...
 
     if request.method == 'POST':
         input_text = request.form.get('input_text')

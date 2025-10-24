@@ -48,6 +48,19 @@
             <p style="font-size: 0.9em; color: #777;">入力言語: {{ all_langs[detected_lang_code] }}</p>
 
             <textarea id="output_text" readonly onclick="copyText()">{{ full_output }}</textarea>
+            <div style="margin-top: 15px; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+        <label>翻訳するターゲット言語を選択してください (複数選択可):</label>
+        <div style="margin-top: 5px;">
+        {% for code, label in all_langs.items() %}
+            {% if code != 'ja' %} <input type="checkbox" id="lang_{{ code }}" name="target_langs" value="{{ code }}" checked>
+            <label for="lang_{{ code }}">{{ label }}</label>
+            {% endif %}
+        {% endfor %}
+        </div>
+    </div>
+
+    <button type="submit" style="margin-top: 15px;">翻訳・コピー用テキスト作成</button>
+</form>
 
             <button type="button" id="copy-button" onclick="copyText()">このテキストをコピーする</button>
 
