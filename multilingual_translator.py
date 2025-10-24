@@ -44,14 +44,15 @@ except Exception as e:
     print(f"DeepL翻訳クライアントの初期化に失敗しました: {e}")
     translator = None
 
+    # 【修正後】: ★target_langs を追加★
 
-def translate_message(text):
-    """
-    langdetectで入力テキストの言語を自動検出
-    -> その他の2言語に翻訳し、結果を辞書として返します。
-    """
+
+# 【修正前】:
+# def translate_message(text):
+#     global translator
+#     if not text.strip() or translator is None:
+def translate_message(text, target_langs):
     global translator
-
     if not text.strip() or translator is None:
         return None, "翻訳エンジンが正しく初期化されていません。"
 
